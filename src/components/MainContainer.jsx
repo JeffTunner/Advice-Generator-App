@@ -6,6 +6,19 @@ import PatternDesktop from "../assets/images/pattern-divider-desktop.svg";
 function MainContainer() {
 
     const [pattern, setPattern] = useState(window.innerWidth);
+    const [advice, setAdvice] = useState("");
+    const [id, setId] = useState(null);
+
+    useEffect(() => {
+        const savedAdvice = localStorage.getItem("adviceData");
+        if(savedAdvice) {
+            const {id, advice} = JSON.parse(savedAdvice);
+            setId(id);
+            setAdvice(advice);
+        } else {
+            adviceGenerator();
+        }
+    },[]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -18,20 +31,33 @@ function MainContainer() {
         };
     },[]);
 
+    async function adviceGenerator() {
+        let url = "https://api.adviceslip.com/advice";
+        const data = await fetch(url, {cache: "no-cache"}).then(res => res.json());
+        setAdvice(data.slip.advice);
+        setId(data.slip.id);
+        localStorage.setItem("adviceData", JSON.stringify({
+            id: data.slip.id,
+            advice: data.slip.advice
+        }));
+    }
+
     return (
         <main className="h-screen bg-veryDarkBlue flex flex-col justify-center items-center box-border p-4">
             <section className="bg-darkBlue max-w-[375px] lg:max-w-[535px] flex flex-col justify-center items-center text-center rounded-lg lg:rounded-2xl px-5 lg:px-10 py-14 gap-5 relative shadow-2xl lg:shadow-4xl">
                 <div>
-                    <h1 className="font-manrope font-medium tracking-widest text-green text-sm">ADVICE #117</h1>
+                    <h1 className="font-manrope font-medium tracking-widest text-green text-sm">ADVICE #{id}</h1>
                 </div>
                 <div >
-                    <p className="font-manrope font-bold text-blue-quote text-quote lg:mb-3">"It is easy to sit up and take notice, whats difficult is getting up and taking action."</p>
+                    <p className="font-manrope font-bold text-blue-quote text-quote lg:mb-3">"{advice}"</p>
                 </div>
                 <div>
                     {pattern < 768 ? (<img src={PatternMobile} alt="Divider" className="w-full"/>) : (<img src={PatternDesktop} alt="Divider" className="w-full"/>)}
                 </div>
                 <div className="flex justify-center">
-                    <button className="bg-green p-5 rounded-full absolute bottom-0 translate-y-1/2 z-50 cursor-pointer hover:shadow-[0_0_20px_hsl(150,100%,66%)] transition-shadow ease-in">
+                    <button 
+                    className="bg-green p-5 rounded-full absolute bottom-0 translate-y-1/2 z-50 cursor-pointer hover:shadow-[0_0_20px_hsl(150,100%,66%)] transition-shadow ease-in"
+                    onClick={adviceGenerator}>
                         <img src={DiceIcon} alt="DiceIcon" />
                     </button>
                 </div>
